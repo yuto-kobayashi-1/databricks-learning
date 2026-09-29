@@ -110,6 +110,24 @@ eval_data = [
 # COMMAND ----------
 
 # DBTITLE 1,predict_fn定義
+def extract_text(content) -> str:
+    """content blockからtype=textの内容だけを抽出する。"""
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict):
+                if part.get("type") == "text":
+                    parts.append(part.get("text", ""))
+            elif getattr(part, "type", None) == "text":
+                parts.append(getattr(part, "text", ""))
+        return "".join(parts)
+
+    return str(content) if content is not None else ""
+
+
 def predict_fn(query: str) -> str:
     response = client.chat.completions.create(
         model=MODEL_NAME,
@@ -124,7 +142,7 @@ def predict_fn(query: str) -> str:
             {"role": "user", "content": query},
         ],
     )
-    return response.choices[0].message.content
+    return extract_text(response.choices[0].message.content)
 
 # COMMAND ----------
 
@@ -223,18 +241,18 @@ def retrieve_documents(query: str):
     # ダミーデータ（実環境ではVector Searchの結果に置き換える）
     search_results = [
         {
-            "text": "Delta Lakeはオープンソースのストレージレイヤーであり、ACIDトランザクションを提供する。",
+            "text": "Delta Lakeはオープンソースのストレージレイヤーである。",
             "document_uri": "doc_A",
             "chunk_id": "chunk_1",
         },
         {
-            "text": "Delta LakeはParquetファイルフォーマットをベースとしている。",
-            "document_uri": "doc_A",
+            "text": "Delta LakeはACIDトランザクションをサポートする。",
+            "document_uri": "doc_B",
             "chunk_id": "chunk_2",
         },
         {
-            "text": "Unity Catalogはデータガバナンスを提供し、アクセス制御を一元管理する。",
-            "document_uri": "doc_B",
+            "text": "Unity Catalogはデータガバナンスを提供する。",
+            "document_uri": "doc_D",
             "chunk_id": "chunk_3",
         },
     ]
@@ -271,7 +289,7 @@ def generate_answer(query: str, context: str) -> str:
             {"role": "user", "content": query},
         ],
     )
-    return response.choices[0].message.content
+    return extract_text(response.choices[0].message.content)
 
 
 @mlflow.trace

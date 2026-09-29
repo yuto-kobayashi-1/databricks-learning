@@ -6,13 +6,13 @@
 
 ```
 mlflow/genai-evaluation/
-├── README.md                        # 本ファイル
-├── 01_basic_evaluation.py           # mlflow.genai.evaluate()の基本使い方
-├── 02_evaluation_dataset.py          # Evaluation DatasetをUnity Catalogで管理
-├── 03_rag_trace.py                   # RAGのRetrieval処理をTraceとして記録
-├── 04_retrieval_metrics.py           # Recall/Precision/Exact MatchのCustom Scorer
+├── README.md
 └── notebooks/
-    └── genai_evaluation_demo         # 全セクションを統合したDatabricks Notebook
+    ├── 01_basic_evaluation.py
+    ├── 02_evaluation_dataset.py
+    ├── 03_rag_trace.py
+    ├── 04_retrieval_metrics.py
+    └── genai_evaluation_demo.py
 ```
 
 ## 前提環境
@@ -30,7 +30,7 @@ mlflow/genai-evaluation/
 
 ### 統合デモとして実行
 
-`notebooks/genai_evaluation_demo` をDatabricks Notebookとして上から順に実行すると、
+`notebooks/genai_evaluation_demo.py` をDatabricks Notebookとして上から順に実行すると、
 基本評価からRAG評価まで全体を通して確認できます。
 
 ## 各ファイルの概要
@@ -41,7 +41,7 @@ mlflow/genai-evaluation/
 | `02_evaluation_dataset.py` | `mlflow.genai.datasets` でUnity Catalog上にEvaluation Datasetを作成・管理 |
 | `03_rag_trace.py` | `@mlflow.trace` でRetrieval処理をRETRIEVER Spanとして記録 |
 | `04_retrieval_metrics.py` | Custom ScorerでRetrieval Recall/Precision/Exact Matchを計算 |
-| `notebooks/genai_evaluation_demo` | 上記を最初から最後まで動かせるDatabricks Notebook |
+| `notebooks/genai_evaluation_demo.py` | 上記を最初から最後まで動かせるDatabricks Notebook |
 
 ## 参考
 

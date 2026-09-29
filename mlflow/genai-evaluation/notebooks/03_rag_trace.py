@@ -112,7 +112,7 @@ def retrieve_documents(query: str):
 results = retrieve_documents("Delta Lakeとは何ですか？")
 print(f"Retrieved {len(results)} documents")
 for r in results:
-    print(f"  - doc_uri: {r['document_uri']}, chunk_id: {r['chunk_id']}")
+    print(f"  - doc_uri: {r.metadata['doc_uri']}, chunk_id: {r.metadata['chunk_id']}")
 
 # COMMAND ----------
 
@@ -137,6 +137,24 @@ for r in results:
 # COMMAND ----------
 
 # DBTITLE 1,rag_app定義
+def extract_text(content) -> str:
+    """content blockからtype=textの内容だけを抽出する。"""
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict):
+                if part.get("type") == "text":
+                    parts.append(part.get("text", ""))
+            elif getattr(part, "type", None) == "text":
+                parts.append(getattr(part, "text", ""))
+        return "".join(parts)
+
+    return str(content) if content is not None else ""
+
+
 @mlflow.trace(span_type=SpanType.CHAT_MODEL)
 def generate_answer(query: str, context: str) -> str:
     response = client.chat.completions.create(
@@ -153,7 +171,7 @@ def generate_answer(query: str, context: str) -> str:
             {"role": "user", "content": query},
         ],
     )
-    return response.choices[0].message.content
+    return extract_text(response.choices[0].message.content)
 
 
 @mlflow.trace

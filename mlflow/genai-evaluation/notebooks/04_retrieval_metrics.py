@@ -10,8 +10,9 @@
 # MAGIC %md
 # MAGIC # 04_retrieval_metrics
 # MAGIC
-# MAGIC 正解Documentがある場合、Retrieval Recall/Precisionや完全一致を
+# MAGIC 正解Documentがある場合、Retrieval Recall/Precisionを
 # MAGIC Custom Scorerで決定論的に評価します。
+# MAGIC あわせて、回答の完全一致を評価するExact Matchの実装例も紹介します。
 # MAGIC
 # MAGIC - `retrieved_document_recall`
 # MAGIC - `retrieved_document_precision`
@@ -239,8 +240,8 @@ def retrieve_documents(query: str):
     # ダミーデータ（実環境ではVector Searchの結果に置き換える）
     search_results = [
         {"text": "Delta Lakeはオープンソースのストレージレイヤーである。", "document_uri": "doc_A", "chunk_id": "chunk_1"},
-        {"text": "Delta LakeはACIDトランザクションをサポートする。", "document_uri": "doc_A", "chunk_id": "chunk_2"},
-        {"text": "Unity Catalogはデータガバナンスを提供する。", "document_uri": "doc_B", "chunk_id": "chunk_3"},
+        {"text": "Delta LakeはACIDトランザクションをサポートする。", "document_uri": "doc_B", "chunk_id": "chunk_2"},
+        {"text": "Unity Catalogはデータガバナンスを提供する。", "document_uri": "doc_D", "chunk_id": "chunk_3"},
     ]
 
     trace_outputs = [
@@ -258,6 +259,24 @@ def retrieve_documents(query: str):
     return trace_outputs
 
 
+def extract_text(content) -> str:
+    """content blockからtype=textの内容だけを抽出する。"""
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict):
+                if part.get("type") == "text":
+                    parts.append(part.get("text", ""))
+            elif getattr(part, "type", None) == "text":
+                parts.append(getattr(part, "text", ""))
+        return "".join(parts)
+
+    return str(content) if content is not None else ""
+
+
 @mlflow.trace
 def rag_app(query: str) -> str:
     documents = retrieve_documents(query)
@@ -269,7 +288,7 @@ def rag_app(query: str) -> str:
             {"role": "user", "content": query},
         ],
     )
-    return response.choices[0].message.content
+    return extract_text(response.choices[0].message.content)
 
 # --- 評価の実行 ---
 
@@ -301,7 +320,7 @@ result = mlflow.genai.evaluate(
 )
 
 print(result.metrics)
-display(result.result_df[["trace_id", "correctness/value", "relevance_to_query/value", "retrieved_document_recall/value", "retrieved_document_precision/value"]].to_string())
+display(result.result_df[["trace_id", "correctness/value", "relevance_to_query/value", "retrieved_document_recall/value", "retrieved_document_precision/value"]])
 
 # COMMAND ----------
 
